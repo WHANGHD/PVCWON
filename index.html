@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>하나건업 PVC 창호 견적</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      color: #333;
+      padding: 1rem;
+    }
+    h1 {
+      text-align: center;
+      background: #004080;
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .form-box {
+      background: white;
+      padding: 1rem;
+      max-width: 400px;
+      margin: 2rem auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label, input, select {
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    input, select {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #e9f5e9;
+      border: 1px solid #b0dab0;
+      border-radius: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>하나건업 PVC 창호 견적</h1>
+
+<div class="form-box">
+  <label>프레임 선택 (시트명)</label>
+  <select id="sheetName" onchange="fetchSashLabel()">
+    <option value="">시트를 불러오는 중...</option>
+  </select>
+
+  <label>문짝 종류: <strong id="sashLabel">불러오는 중...</strong></label>
+
+  <label>가로 (W mm)</label>
+  <input type="number" id="width" placeholder="예: 1300" />
+
+  <label>세로 (H mm)</label>
+  <input type="number" id="height" placeholder="예: 1200" />
+
+  <label>수량</label>
+  <input type="number" id="quantity" placeholder="예: 2" />
+
+  <button onclick="submitEstimate()">견적 확인</button>
+
+  <div class="result" id="resultBox">
+    <strong>계산 결과</strong><br/>
+    프레임: <span id="sheetNameText"></span><br/>
+    문짝 종류: <span id="sashText"></span><br/>
+    규격: <span id="sizeText"></span><br/>
+    수량: <span id="quantityText"></span><br/>
+    단가: <span id="unitPriceText"></span> 원<br/>
+    공급가액: <span id="totalPriceText"></span> 원
+  </div>
+</div>
+
+<script>
+  const scriptURL = "https://script.google.com/macros/s/AKfycbxMDH0-SLnZ62CT5ixVXDouqHsathEY8fZ4NSEdWnqUk6qIHf16NOyXtxUdG6MVAogTDg/exec";
+  let sashGlobal = "";
+
+  // 페이지 로딩 시 시트 목록 불러오기
+  window.onload = async function () {
+    try {
+      const response = await fetch(`${scriptURL}?mode=sheets`);
+      const result = await response.json();
+      const select = document.getElementById("sheetName");
+
+      select.innerHTML = ""; // 기존 옵션 제거
+      result.sheets.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+
+      // 첫 번째 시트 선택 상태에서 문짝 불러오기
+      fetchSashLabel();
+
+    } catch (err) {
+      alert("시트 목록 불러오기 실패");
+    }
+  };
+
+  async function fetchSashLabel() {
+    const sheetName = document.getElementById('sheetName').value;
+
+    try {
+      const response = await fetch(`${scriptURL}?sheet=${sheetName}`);
+      const result = await response.json();
+      sashGlobal = result.sash || "불러오기 실패";
+      document.getElementById('sashLabel').textContent = sashGlobal;
+    } catch (e) {
+      sashGlobal = "불러오기 실패";
+      document.getElementById('sashLabel').textContent = sashGlobal;
+    }
+  }
+
+  async function submitEstimate() {
+    const width = document.getElementById('width').value;
+    const height = document.getElementById('height').value;
+    const quantity = parseInt(document.getElementById('quantity').value || 1);
+    const sheetName = document.getElementById('sheetName').value;
+
+    if (!width || !height || !quantity || !sheetName) {
+      alert("모든 값을 입력해주세요.");
+      return;
+    }
+
+    const data = {
+      sheetName: sheetName,
+      width: width,
+      height: height
+    };
+
+    try {
+      const response = await fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        alert("계산 오류: " + result.message);
+        return;
+      }
+
+      const unitPrice = Math.floor(Number(result.result));
+      const total = unitPrice * quantity;
+
+      document.getElementById('sheetNameText').textContent = sheetName;
+      document.getElementById('sashText').textContent = sashGlobal;
+      document.getElementById('sizeText').textContent = `${result.width} × ${result.height}`;
+      document.getElementById('quantityText').textContent = quantity;
+      document.getElementById('unitPriceText').textContent = unitPrice.toLocaleString();
+      document.getElementById('totalPriceText').textContent = total.toLocaleString();
+      document.getElementById('resultBox').style.display = 'block';
+
+    } catch (error) {
+      alert("서버 통신 실패: " + error.message);
+    }
+  }
+</script>
+
+</body>
+</html>
