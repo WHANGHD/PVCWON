@@ -63,7 +63,7 @@
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbwX5qwBF4uEDtkYJhJa6pc6Zst2-hpvHJQr2kxKTFPvT6U2GbSa2PcxoOfSqtHxk1jAnQ/exec";
 
-// 프레임(시트) 목록 불러오기
+// 시트 목록 불러오기
 fetch(URL)
   .then(res => res.json())
   .then(data => {
@@ -88,7 +88,7 @@ document.getElementById("sheetName").addEventListener("change", () => {
     });
 });
 
-// 견적 확인
+// 견적 제출
 function submitEstimate() {
   const sheetName = document.getElementById("sheetName").value;
   const door = parseInt(document.getElementById("door").value);
@@ -110,10 +110,10 @@ function submitEstimate() {
     .then(res => res.json())
     .then(data => {
       if (data.error) throw new Error(data.message);
-      const amount = Math.floor(data.result); // 소수점 제거
+      const amount = Math.floor(data.result);
       const note = data.note || "";
       document.getElementById("resultBox").innerHTML =
-        `💰 견적금액 (VAT 별도): <strong>${amount.toLocaleString()} 원</strong><br><br>📝 ${note}`;
+        `💰 견적금액(VAT별도): <strong>${amount.toLocaleString()} 원</strong><br><br>📝 ${note}`;
     })
     .catch(err => {
       alert("견적 계산 중 오류 발생: " + err.message);
