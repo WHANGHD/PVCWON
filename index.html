@@ -5,8 +5,8 @@
   <title>PVC 견적 계산기</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    label { font-weight: bold; margin-top: 15px; display: block; }
-    select, input, button {
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, select, button {
       padding: 10px;
       font-size: 16px;
       width: 300px;
@@ -16,7 +16,7 @@
       margin-top: 20px;
       padding: 15px;
       border: 1px solid #ccc;
-      background: #f7f7f7;
+      background: #f9f9f9;
       font-size: 18px;
     }
   </style>
@@ -61,7 +61,7 @@
 <div id="resultBox">결과가 여기에 표시됩니다</div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbyS6QdFTwl3d-LR23rzcGrHsDMZCyQhVwhzSeSH4wT2ht22n-0quhLhxzumor_Mgiz5Vw/exec";
+const URL = "https://script.google.com/macros/s/AKfycbwX5qwBF4uEDtkYJhJa6pc6Zst2-hpvHJQr2kxKTFPvT6U2GbSa2PcxoOfSqtHxk1jAnQ/exec";
 
 // 시트 목록 불러오기
 fetch(URL)
@@ -88,7 +88,7 @@ document.getElementById("sheetName").addEventListener("change", () => {
     });
 });
 
-// 견적 제출
+// 견적 계산
 function submitEstimate() {
   const sheetName = document.getElementById("sheetName").value;
   const door = parseInt(document.getElementById("door").value);
@@ -113,12 +113,11 @@ function submitEstimate() {
 
       const amount = Math.floor(data.result);
       const note = data.note || "";
-
       document.getElementById("resultBox").innerHTML =
         `💰 견적금액(VAT별도): <strong>${amount.toLocaleString()} 원</strong><br><br>📝 ${note}`;
     })
     .catch(err => {
-      alert("견적 계산 중 오류 발생: " + err.message);
+      alert("견적 계산 중 오류: " + err.message);
     });
 }
 </script>
