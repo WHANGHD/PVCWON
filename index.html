@@ -52,7 +52,7 @@
     }
   </style>
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyhU27D9lw2xayEpwuJajZAOzST4NYmyOxA_GWDNRAD-E35WyzuhoBRgUUUDUCnDn7VOQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbx1mtTGGhraAOcvSKvfjGUgnsiLtHgAsJrtR5PB-Jc3IBHoVjEqSahPR7ADdbrNzCjDHA/exec";
 
     async function loadSheets() {
       try {
@@ -61,7 +61,7 @@
         const select = document.getElementById("sheet");
         select.innerHTML = data.sheets.map(name => `<option value="${name}">${name}</option>`).join('');
       } catch (err) {
-        document.getElementById("result").textContent = "❌ 프레임 목록을 불러오지 못했습니다.";
+        document.getElementById("result").textContent = "❌ 프레임 목록 불러오기 실패";
       }
     }
 
@@ -84,7 +84,7 @@
           resultDiv.innerHTML = `✅ 계산된 견적: <strong>${data.result}</strong>`;
         }
       } catch (err) {
-        document.getElementById("result").textContent = "❌ 서버 응답 오류가 발생했습니다.";
+        document.getElementById("result").textContent = "❌ 서버 오류";
       }
     }
 
@@ -94,31 +94,31 @@
 <body>
   <h2>창호 견적 계산기</h2>
 
-  <label for="sheet">프레임 선택</label>
+  <label>프레임 (시트 선택)</label>
   <select id="sheet"></select>
 
-  <label for="sash">창짝 (짝수)</label>
+  <label>창짝 (짝수)</label>
   <select id="sash">
     <option value="2짝">2짝</option>
     <option value="3짝">3짝</option>
     <option value="4짝">4짝</option>
   </select>
 
-  <label for="glass">유리 종류</label>
+  <label>유리 종류</label>
   <select id="glass">
     <option value="0">22투명+투명</option>
     <option value="1">22그린+투명</option>
     <option value="2">22투명+블투명</option>
   </select>
 
-  <label for="width">폭 (W)</label>
-  <input type="number" id="width" placeholder="예: 2000" required>
+  <label>폭 (W)</label>
+  <input type="number" id="width" placeholder="예: 2000">
 
-  <label for="height">높이 (H)</label>
-  <input type="number" id="height" placeholder="예: 2000" required>
+  <label>높이 (H)</label>
+  <input type="number" id="height" placeholder="예: 2000">
 
-  <label for="qty">수량</label>
-  <input type="number" id="qty" placeholder="예: 1" required>
+  <label>수량</label>
+  <input type="number" id="qty" placeholder="예: 1">
 
   <button onclick="calculateEstimate()">견적 계산</button>
 
