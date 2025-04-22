@@ -1,16 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <title>창호 견적 계산기</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      background-color: #007BFF;
+      color: white;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      text-align: center;
+      color: #222;
+    }
+  </style>
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbw2pxsD-S8Qm-uaqlj5GOQ83sxSDndj_CZM-cDctxqudkUTa5bjzrIeA1dqNRlhTFvDIA/exec";
 
     async function loadSheets() {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      const sheetSelect = document.getElementById("sheet");
-      sheetSelect.innerHTML = data.sheets.map(s => `<option value="${s}">${s}</option>`).join('');
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        const select = document.getElementById("sheet");
+        select.innerHTML = data.sheets.map(name => `<option value="${name}">${name}</option>`).join('');
+      } catch (err) {
+        document.getElementById("result").textContent = "❌ 프레임 목록을 불러오지 못했습니다.";
+      }
     }
 
     async function calculateEstimate() {
@@ -22,14 +74,17 @@
       const qty = document.getElementById("qty").value;
 
       const params = new URLSearchParams({ sheet, sash, glass, width, height, qty });
-      const res = await fetch(`${API_URL}?${params.toString()}`);
-      const data = await res.json();
-
-      const resultDiv = document.getElementById("result");
-      if (data.error) {
-        resultDiv.textContent = "❌ 오류: " + data.message;
-      } else {
-        resultDiv.innerHTML = `✅ 견적 금액: <strong>${data.result}</strong>`;
+      try {
+        const res = await fetch(`${API_URL}?${params.toString()}`);
+        const data = await res.json();
+        const resultDiv = document.getElementById("result");
+        if (data.error) {
+          resultDiv.textContent = "❌ 오류: " + data.message;
+        } else {
+          resultDiv.innerHTML = `✅ 계산된 견적: <strong>${data.result}</strong>`;
+        }
+      } catch (err) {
+        document.getElementById("result").textContent = "❌ 서버 응답 오류가 발생했습니다.";
       }
     }
 
@@ -39,32 +94,34 @@
 <body>
   <h2>창호 견적 계산기</h2>
 
-  <label>프레임 (시트): 
-    <select id="sheet"></select>
-  </label><br><br>
+  <label for="sheet">프레임 선택</label>
+  <select id="sheet"></select>
 
-  <label>창짝 선택: 
-    <select id="sash">
-      <option value="2짝">2짝</option>
-      <option value="3짝">3짝</option>
-      <option value="4짝">4짝</option>
-    </select>
-  </label><br><br>
+  <label for="sash">창짝 (짝수)</label>
+  <select id="sash">
+    <option value="2짝">2짝</option>
+    <option value="3짝">3짝</option>
+    <option value="4짝">4짝</option>
+  </select>
 
-  <label>유리 종류:
-    <select id="glass">
-      <option value="0">22투명+투명</option>
-      <option value="1">22그린+투명</option>
-      <option value="2">22투명+블투명</option>
-    </select>
-  </label><br><br>
+  <label for="glass">유리 종류</label>
+  <select id="glass">
+    <option value="0">22투명+투명</option>
+    <option value="1">22그린+투명</option>
+    <option value="2">22투명+블투명</option>
+  </select>
 
-  <label>폭 (W): <input type="number" id="width" required></label><br>
-  <label>높이 (H): <input type="number" id="height" required></label><br>
-  <label>수량 (Qty): <input type="number" id="qty" required></label><br><br>
+  <label for="width">폭 (W)</label>
+  <input type="number" id="width" placeholder="예: 2000" required>
+
+  <label for="height">높이 (H)</label>
+  <input type="number" id="height" placeholder="예: 2000" required>
+
+  <label for="qty">수량</label>
+  <input type="number" id="qty" placeholder="예: 1" required>
 
   <button onclick="calculateEstimate()">견적 계산</button>
 
-  <div id="result" style="margin-top: 20px; font-weight: bold;"></div>
+  <div id="result"></div>
 </body>
 </html>
