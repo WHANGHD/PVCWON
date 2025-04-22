@@ -2,184 +2,108 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>하나건업 PVC 창호 견적</title>
+  <title>하나건업 견적 시스템</title>
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-      color: #333;
-      padding: 1rem;
-    }
-    h1 {
-      text-align: center;
-      background: #004080;
-      color: white;
-      padding: 1rem;
-      border-radius: 8px;
-    }
-    .form-box {
-      background: white;
-      padding: 1rem;
-      max-width: 400px;
-      margin: 2rem auto;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    label, input, select {
-      display: block;
-      width: 100%;
-      margin-bottom: 1rem;
-      font-size: 1rem;
-    }
-    input, select {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 0.8rem;
-      font-size: 1rem;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    .result {
-      margin-top: 2rem;
-      padding: 1rem;
-      background: #e9f5e9;
-      border: 1px solid #b0dab0;
-      border-radius: 5px;
-      display: none;
-    }
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    .container { background: white; padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; font-size: 16px; }
+    .result-box { margin-top: 20px; padding: 15px; background: #e9f7ef; border-left: 5px solid #28a745; }
+    .note { font-size: 13px; color: #666; margin-top: 10px; }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h2>하나건업 견적 계산기</h2>
 
-<h1>하나건업 PVC 창호 견적</h1>
+    <label>프레임 선택</label>
+    <select id="sheetName">
+      <option value="115">115</option>
+      <option value="230">230</option>
+    </select>
 
-<div class="form-box">
-  <label>프레임 선택 (시트명)</label>
-  <select id="sheetName" onchange="fetchSashLabel()">
-    <option value="">시트를 불러오는 중...</option>
-  </select>
+    <label>문짝 종류</label>
+    <div id="sash">불러오는 중...</div>
 
-  <label>문짝 종류: <strong id="sashLabel">불러오는 중...</strong></label>
+    <label>짝수문 선택</label>
+    <select id="doorType">
+      <option value="2">2짝문</option>
+      <option value="3">3짝문</option>
+      <option value="4">4짝문</option>
+    </select>
 
-  <label>가로 (W mm)</label>
-  <input type="number" id="width" placeholder="예: 1300" />
+    <label>가로 (W mm)</label>
+    <input type="number" id="width" placeholder="예: 1300" />
 
-  <label>세로 (H mm)</label>
-  <input type="number" id="height" placeholder="예: 1200" />
+    <label>세로 (H mm)</label>
+    <input type="number" id="height" placeholder="예: 2000" />
 
-  <label>수량</label>
-  <input type="number" id="quantity" placeholder="예: 2" />
+    <label>유리 선택</label>
+    <select id="glass">
+      <option value="0">22투명+투명</option>
+      <option value="1">22그린+투명</option>
+      <option value="2">22투명+불투명</option>
+    </select>
 
-  <button onclick="submitEstimate()">견적 확인</button>
+    <label>수량</label>
+    <input type="number" id="qty" value="1" />
 
-  <div class="result" id="resultBox">
-    <strong>계산 결과</strong><br/>
-    프레임: <span id="sheetNameText"></span><br/>
-    문짝 종류: <span id="sashText"></span><br/>
-    규격: <span id="sizeText"></span><br/>
-    수량: <span id="quantityText"></span><br/>
-    단가: <span id="unitPriceText"></span> 원<br/>
-    공급가액: <span id="totalPriceText"></span> 원
+    <button onclick="calculateEstimate()">견적 확인</button>
+
+    <div class="result-box" id="result" style="display:none;"></div>
+    <div class="note" id="footerNote"></div>
   </div>
-</div>
 
-<script>
-  const scriptURL = "https://script.google.com/macros/s/AKfycbxMDH0-SLnZ62CT5ixVXDouqHsathEY8fZ4NSEdWnqUk6qIHf16NOyXtxUdG6MVAogTDg/exec";
-  let sashGlobal = "";
+  <script>
+    const URL = "https://script.google.com/macros/s/AKfycbz4DyI_Vi75_Mc_V685QitdmYN2_r3fCf-qcA6aNKC9VGuCmjMNK7LUT1wd-3Y_YswCvg/exec";
 
-  // 페이지 로딩 시 시트 목록 불러오기
-  window.onload = async function () {
-    try {
-      const response = await fetch(`${scriptURL}?mode=sheets`);
-      const result = await response.json();
-      const select = document.getElementById("sheetName");
-
-      select.innerHTML = ""; // 기존 옵션 제거
-      result.sheets.forEach(name => {
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        select.appendChild(option);
-      });
-
-      // 첫 번째 시트 선택 상태에서 문짝 불러오기
-      fetchSashLabel();
-
-    } catch (err) {
-      alert("시트 목록 불러오기 실패");
-    }
-  };
-
-  async function fetchSashLabel() {
-    const sheetName = document.getElementById('sheetName').value;
-
-    try {
-      const response = await fetch(`${scriptURL}?sheet=${sheetName}`);
-      const result = await response.json();
-      sashGlobal = result.sash || "불러오기 실패";
-      document.getElementById('sashLabel').textContent = sashGlobal;
-    } catch (e) {
-      sashGlobal = "불러오기 실패";
-      document.getElementById('sashLabel').textContent = sashGlobal;
-    }
-  }
-
-  async function submitEstimate() {
-    const width = document.getElementById('width').value;
-    const height = document.getElementById('height').value;
-    const quantity = parseInt(document.getElementById('quantity').value || 1);
-    const sheetName = document.getElementById('sheetName').value;
-
-    if (!width || !height || !quantity || !sheetName) {
-      alert("모든 값을 입력해주세요.");
-      return;
+    async function fetchSash() {
+      const sheet = document.getElementById("sheetName").value;
+      const res = await fetch(`${URL}?sheet=${sheet}`);
+      const data = await res.json();
+      document.getElementById("sash").innerText = data.sash || "(불러오기 실패)";
     }
 
-    const data = {
-      sheetName: sheetName,
-      width: width,
-      height: height
-    };
+    async function calculateEstimate() {
+      const sheetName = document.getElementById("sheetName").value;
+      const width = parseInt(document.getElementById("width").value);
+      const height = parseInt(document.getElementById("height").value);
+      const door = parseInt(document.getElementById("doorType").value); // 2,3,4
+      const glass = parseInt(document.getElementById("glass").value); // 0,1,2
+      const qty = parseInt(document.getElementById("qty").value);
 
-    try {
-      const response = await fetch(scriptURL, {
+      const payload = { sheetName, width, height, door, glass, qty };
+
+      const res = await fetch(URL, {
         method: "POST",
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
+      const data = await res.json();
 
-      const result = await response.json();
-      if (result.error) {
-        alert("계산 오류: " + result.message);
+      if (data.error) {
+        document.getElementById("result").innerText = "오류: " + data.message;
         return;
       }
 
-      const unitPrice = Math.floor(Number(result.result));
-      const total = unitPrice * quantity;
+      const resultBox = document.getElementById("result");
+      resultBox.style.display = "block";
+      resultBox.innerHTML = `
+        <strong>계산 결과</strong><br>
+        프레임: ${sheetName}<br>
+        문짝 종류: ${document.getElementById("sash").innerText}<br>
+        문짝 타입: ${door}짝문<br>
+        유리: ${document.getElementById("glass").options[glass].text}<br>
+        규격: ${width} × ${height} mm<br>
+        수량: ${qty}개<br>
+        공급가액: <strong>₩${data.result.toLocaleString()} (VAT 별도)</strong>
+      `;
 
-      document.getElementById('sheetNameText').textContent = sheetName;
-      document.getElementById('sashText').textContent = sashGlobal;
-      document.getElementById('sizeText').textContent = `${result.width} × ${result.height}`;
-      document.getElementById('quantityText').textContent = quantity;
-      document.getElementById('unitPriceText').textContent = unitPrice.toLocaleString();
-      document.getElementById('totalPriceText').textContent = total.toLocaleString();
-      document.getElementById('resultBox').style.display = 'block';
-
-    } catch (error) {
-      alert("서버 통신 실패: " + error.message);
+      document.getElementById("footerNote").innerText = data.note || "";
     }
-  }
-</script>
 
+    document.getElementById("sheetName").addEventListener("change", fetchSash);
+    window.onload = fetchSash;
+  </script>
 </body>
 </html>
