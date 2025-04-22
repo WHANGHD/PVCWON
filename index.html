@@ -2,108 +2,123 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>하나건업 견적 시스템</title>
+  <title>하나건업 PVC 견적</title>
   <style>
-    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-    .container { background: white; padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    label { display: block; margin-top: 15px; font-weight: bold; }
-    input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
-    button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; font-size: 16px; }
-    .result-box { margin-top: 20px; padding: 15px; background: #e9f7ef; border-left: 5px solid #28a745; }
-    .note { font-size: 13px; color: #666; margin-top: 10px; }
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
+    label { display: block; margin-top: 20px; font-weight: bold; }
+    select, input { width: 100%; padding: 8px; font-size: 14px; }
+    button { margin-top: 20px; padding: 10px; font-size: 16px; width: 100%; }
+    #resultBox { margin-top: 30px; padding: 15px; background: #f2f2f2; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>하나건업 견적 계산기</h2>
+  <h2>PVC 견적 계산기</h2>
 
-    <label>프레임 선택</label>
-    <select id="sheetName">
-      <option value="115">115</option>
-      <option value="230">230</option>
-    </select>
+  <label>프레임 선택</label>
+  <select id="sheetName"></select>
 
-    <label>문짝 종류</label>
-    <div id="sash">불러오는 중...</div>
+  <label>문짝 종류</label>
+  <div id="sash">-</div>
 
-    <label>짝수문 선택</label>
-    <select id="doorType">
-      <option value="2">2짝문</option>
-      <option value="3">3짝문</option>
-      <option value="4">4짝문</option>
-    </select>
+  <label>짝수문 선택</label>
+  <select id="door">
+    <option value="2">2짝문</option>
+    <option value="3">3짝문</option>
+    <option value="4">4짝문</option>
+  </select>
 
-    <label>가로 (W mm)</label>
-    <input type="number" id="width" placeholder="예: 1300" />
+  <label>가로 (mm)</label>
+  <input type="number" id="width" />
 
-    <label>세로 (H mm)</label>
-    <input type="number" id="height" placeholder="예: 2000" />
+  <label>세로 (mm)</label>
+  <input type="number" id="height" />
 
-    <label>유리 선택</label>
-    <select id="glass">
-      <option value="0">22투명+투명</option>
-      <option value="1">22그린+투명</option>
-      <option value="2">22투명+불투명</option>
-    </select>
+  <label>유리 선택</label>
+  <select id="glass">
+    <option value="0">22투명+투명</option>
+    <option value="1">22그린+투명</option>
+    <option value="2">22투명+불투명</option>
+  </select>
 
-    <label>수량</label>
-    <input type="number" id="qty" value="1" />
+  <label>수량</label>
+  <input type="number" id="qty" value="1" />
 
-    <button onclick="calculateEstimate()">견적 확인</button>
+  <button onclick="calculate()">견적 확인</button>
 
-    <div class="result-box" id="result" style="display:none;"></div>
-    <div class="note" id="footerNote"></div>
+  <div id="resultBox" style="display:none;">
+    <h3>견적 결과</h3>
+    <div id="resultText">결과를 계산 중입니다...</div>
+    <div id="note" style="margin-top:10px; font-style: italic;"></div>
   </div>
 
   <script>
     const URL = "https://script.google.com/macros/s/AKfycbwuOrswYidOi0FocOE-Q5ZsyPGzwIDHgqwfHiN9vVOXSZ9Ix7a24dY148nM7X421j5ZpA/exec";
 
-    async function fetchSash() {
-      const sheet = document.getElementById("sheetName").value;
-      const res = await fetch(`${URL}?sheet=${sheet}`);
-      const data = await res.json();
-      document.getElementById("sash").innerText = data.sash || "(불러오기 실패)";
+    function loadSheetData(sheet = "115") {
+      fetch(URL + "?sheet=" + sheet)
+        .then(res => res.json())
+        .then(data => {
+          // 프레임 목록
+          const sheetSelect = document.getElementById("sheetName");
+          sheetSelect.innerHTML = "";
+          data.sheets.forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            sheetSelect.appendChild(opt);
+          });
+
+          // 문짝 종류, 하단 문구
+          document.getElementById("sash").textContent = data.sash;
+          document.getElementById("note").textContent = data.note;
+        });
     }
 
-    async function calculateEstimate() {
-      const sheetName = document.getElementById("sheetName").value;
-      const width = parseInt(document.getElementById("width").value);
-      const height = parseInt(document.getElementById("height").value);
-      const door = parseInt(document.getElementById("doorType").value); // 2,3,4
-      const glass = parseInt(document.getElementById("glass").value); // 0,1,2
-      const qty = parseInt(document.getElementById("qty").value);
-
-      const payload = { sheetName, width, height, door, glass, qty };
-
-      const res = await fetch(URL, {
-        method: "POST",
-        body: JSON.stringify(payload)
+    // 시트 변경 시 데이터 새로 불러오기
+    document.addEventListener("DOMContentLoaded", () => {
+      loadSheetData();
+      document.getElementById("sheetName").addEventListener("change", (e) => {
+        loadSheetData(e.target.value);
       });
-      const data = await res.json();
+    });
 
-      if (data.error) {
-        document.getElementById("result").innerText = "오류: " + data.message;
-        return;
-      }
+    function calculate() {
+      const sheetName = document.getElementById("sheetName").value;
+      const width = Number(document.getElementById("width").value);
+      const height = Number(document.getElementById("height").value);
+      const door = Number(document.getElementById("door").value); // 2, 3, 4
+      const glass = Number(document.getElementById("glass").value); // 0, 1, 2
+      const qty = Number(document.getElementById("qty").value);
 
-      const resultBox = document.getElementById("result");
-      resultBox.style.display = "block";
-      resultBox.innerHTML = `
-        <strong>계산 결과</strong><br>
-        프레임: ${sheetName}<br>
-        문짝 종류: ${document.getElementById("sash").innerText}<br>
-        문짝 타입: ${door}짝문<br>
-        유리: ${document.getElementById("glass").options[glass].text}<br>
-        규격: ${width} × ${height} mm<br>
-        수량: ${qty}개<br>
-        공급가액: <strong>₩${data.result.toLocaleString()} (VAT 별도)</strong>
-      `;
+      fetch(URL, {
+        method: "POST",
+        body: JSON.stringify({ sheetName, width, height, door, glass, qty }),
+        headers: { "Content-Type": "application/json" }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const resultBox = document.getElementById("resultBox");
+          const resultText = document.getElementById("resultText");
+          const note = document.getElementById("note");
 
-      document.getElementById("footerNote").innerText = data.note || "";
+          if (data.error) {
+            resultText.innerHTML = `⚠️ 오류: ${data.message}`;
+          } else {
+            resultText.innerHTML = `
+              프레임: ${sheetName}<br>
+              문짝: ${document.getElementById("sash").textContent}<br>
+              짝수문: ${door}짝문<br>
+              유리: ${document.getElementById("glass").selectedOptions[0].text}<br>
+              규격: ${width} × ${height} mm<br>
+              수량: ${qty}개<br><br>
+              공급가액: <b>₩${Math.floor(data.result).toLocaleString()}</b> <span style="font-size:13px;">(VAT 별도)</span>
+            `;
+            note.textContent = data.note;
+          }
+
+          resultBox.style.display = "block";
+        });
     }
-
-    document.getElementById("sheetName").addEventListener("change", fetchSash);
-    window.onload = fetchSash;
   </script>
 </body>
 </html>
