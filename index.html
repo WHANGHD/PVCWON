@@ -47,12 +47,11 @@
     #result {
       margin-top: 20px;
       font-size: 18px;
-      text-align: center;
       color: #222;
     }
   </style>
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzL6ltS8up-7bBPRIyjmPGp8Hy4SDh5rfk57sZ0v8rxedYXC2RRkyTRrzmPT8ZJCMQslQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw2pxsD-S8Qm-uaqlj5GOQ83sxSDndj_CZM-cDctxqudkUTa5bjzrIeA1dqNRlhTFvDIA/exec";
 
     async function loadSheets() {
       try {
@@ -82,12 +81,27 @@
         if (data.error) {
           resultDiv.textContent = "❌ 오류: " + data.message;
         } else {
+          const unitPrice = parseFloat(String(data.result).replace(/[^\d.]/g, '')) || 0;
+          const rounded = Math.round(unitPrice);
+          const qtyInt = parseInt(qty);
+          const supply = Math.round(rounded * qtyInt / 1.1);
+          const vat = rounded * qtyInt - supply;
+
           resultDiv.innerHTML = `
-            <div style="text-align:center; padding:15px;">
-              <div style="font-size:20px; color:#007BFF;">💰 계산된 견적 금액</div>
-              <div style="font-size:30px; font-weight:bold; color:#222; margin-top:8px;">
-                ${data.result}
-              </div>
+            <div style="text-align:left; padding:15px; background:#f1f1f1; border-radius:10px;">
+              <h3 style="margin-bottom: 10px;">🧾 견적 상세</h3>
+              <ul style="list-style:none; padding-left:0; line-height:1.8;">
+                <li><strong>프레임:</strong> ${sheet}</li>
+                <li><strong>짝수:</strong> ${sash}</li>
+                <li><strong>유리:</strong> ${document.getElementById("glass").selectedOptions[0].text}</li>
+                <li><strong>규격:</strong> ${width} × ${height}</li>
+                <li><strong>수량:</strong> ${qtyInt}개</li>
+                <li><strong>단가:</strong> ₩${rounded.toLocaleString()}</li>
+                <li><strong>공급가액:</strong> ₩${supply.toLocaleString()}</li>
+                <li><strong>VAT (10%):</strong> ₩${vat.toLocaleString()}</li>
+                <hr>
+                <li style="font-size:20px; font-weight:bold; color:#007BFF;">총 견적: ₩${(rounded * qtyInt).toLocaleString()}</li>
+              </ul>
             </div>`;
         }
       } catch (err) {
@@ -101,30 +115,30 @@
 <body>
   <h2>창호 견적 계산기</h2>
 
-  <label for="sheet">프레임 선택</label>
+  <label>프레임 (시트 선택)</label>
   <select id="sheet"></select>
 
-  <label for="sash">창짝 (짝수)</label>
+  <label>창짝 (짝수)</label>
   <select id="sash">
     <option value="2짝">2짝</option>
     <option value="3짝">3짝</option>
     <option value="4짝">4짝</option>
   </select>
 
-  <label for="glass">유리 종류</label>
+  <label>유리 종류</label>
   <select id="glass">
     <option value="0">22투명+투명</option>
     <option value="1">22그린+투명</option>
     <option value="2">22투명+블투명</option>
   </select>
 
-  <label for="width">폭 (W)</label>
+  <label>폭 (W)</label>
   <input type="number" id="width" placeholder="예: 2000">
 
-  <label for="height">높이 (H)</label>
+  <label>높이 (H)</label>
   <input type="number" id="height" placeholder="예: 2000">
 
-  <label for="qty">수량</label>
+  <label>수량</label>
   <input type="number" id="qty" placeholder="예: 1">
 
   <button onclick="calculateEstimate()">견적 계산</button>
