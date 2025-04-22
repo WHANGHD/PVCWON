@@ -7,17 +7,11 @@
     body { font-family: sans-serif; padding: 20px; }
     label { display: block; margin-top: 15px; font-weight: bold; }
     select, input, button {
-      padding: 10px;
-      font-size: 16px;
-      width: 300px;
-      margin-bottom: 10px;
+      padding: 10px; font-size: 16px; width: 300px; margin-bottom: 10px;
     }
     #resultBox {
-      margin-top: 20px;
-      padding: 15px;
-      border: 1px solid #ccc;
-      background: #f7f7f7;
-      font-size: 18px;
+      margin-top: 20px; padding: 15px; border: 1px solid #ccc;
+      background: #f7f7f7; font-size: 18px;
     }
   </style>
 </head>
@@ -25,15 +19,13 @@
 
 <h2>🪟 PVC 견적 계산기</h2>
 
-<label for="sheetName">프레임 선택</label>
-<select id="sheetName">
-  <option value="">불러오는 중...</option>
-</select>
+<label>프레임 선택</label>
+<select id="sheetName"><option>불러오는 중...</option></select>
 
 <label>문짝 종류</label>
 <p id="sash">-</p>
 
-<label for="door">짝수문 선택</label>
+<label>짝수문</label>
 <select id="door">
   <option value="2">2짝문</option>
   <option value="3">3짝문</option>
@@ -61,64 +53,58 @@
 <div id="resultBox">결과가 여기에 표시됩니다</div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbwX5qwBF4uEDtkYJhJa6pc6Zst2-hpvHJQr2kxKTFPvT6U2GbSa2PcxoOfSqtHxk1jAnQ/exec";
+  const URL = "https://script.google.com/macros/s/AKfycbwX5qwBF4uEDtkYJhJa6pc6Zst2-hpvHJQr2kxKTFPvT6U2GbSa2PcxoOfSqtHxk1jAnQ/exec";
 
-// 시트 목록 불러오기
-fetch(URL)
-  .then(res => res.json())
-  .then(data => {
-    const select = document.getElementById("sheetName");
-    select.innerHTML = '<option value="">-- 프레임 선택 --</option>';
-    data.sheets.forEach(name => {
-      const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
-      select.appendChild(opt);
+  // 1) 시트 목록 불러오기
+  fetch(URL)
+    .then(r => r.json())
+    .then(data => {
+      const sel = document.getElementById("sheetName");
+      sel.innerHTML = '<option value="">-- 시트 선택 --</option>';
+      data.sheets.forEach(n => {
+        const o = document.createElement("option");
+        o.value = n; o.textContent = n;
+        sel.appendChild(o);
+      });
     });
+
+  // 2) 문짝 종류 표시
+  document.getElementById("sheetName").addEventListener("change", () => {
+    const sheet = document.getElementById("sheetName").value;
+    if (!sheet) return;
+    fetch(`${URL}?sheet=${encodeURIComponent(sheet)}`)
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById("sash").textContent = data.note ? "-" : data.sash;  
+      });
   });
 
-// 문짝 종류 표시
-document.getElementById("sheetName").addEventListener("change", () => {
-  const sheet = document.getElementById("sheetName").value;
-  if (!sheet) return;
-  fetch(`${URL}?sheet=${encodeURIComponent(sheet)}`)
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("sash").textContent = data.sash || "-";
-    });
-});
+  // 3) 견적 계산 (GET 방식)
+  function submitEstimate() {
+    const sheet = document.getElementById("sheetName").value;
+    const door = document.getElementById("door").value;
+    const width = document.getElementById("width").value;
+    const height = document.getElementById("height").value;
+    const glass = document.getElementById("glass").value;
+    const qty = document.getElementById("qty").value;
 
-// 견적 제출
-function submitEstimate() {
-  const sheetName = document.getElementById("sheetName").value;
-  const door = parseInt(document.getElementById("door").value);
-  const width = parseInt(document.getElementById("width").value);
-  const height = parseInt(document.getElementById("height").value);
-  const glass = parseInt(document.getElementById("glass").value);
-  const qty = parseInt(document.getElementById("qty").value);
+    if (!sheet || !width || !height || !qty) {
+      alert("모든 항목을 입력해주세요."); return;
+    }
 
-  if (!sheetName || isNaN(width) || isNaN(height) || isNaN(door) || isNaN(glass) || isNaN(qty)) {
-    alert("모든 항목을 정확히 입력해주세요.");
-    return;
+    const qs = new URLSearchParams({ sheet, door, glass, width, height, qty });
+    fetch(`${URL}?${qs.toString()}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) throw new Error(data.message);
+        const amt = Math.floor(data.result).toLocaleString();
+        document.getElementById("resultBox").innerHTML =
+          `💰 견적금액(VAT별도): <strong>${amt}원</strong><br>📝 ${data.note}`;
+      })
+      .catch(e => {
+        alert("계산 중 오류 발생: " + e.message);
+      });
   }
-
-  fetch(URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sheetName, door, width, height, glass, qty })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) throw new Error(data.message);
-      const amount = Math.floor(data.result);
-      const note = data.note || "";
-      document.getElementById("resultBox").innerHTML =
-        `💰 견적금액(VAT별도): <strong>${amount.toLocaleString()} 원</strong><br><br>📝 ${note}`;
-    })
-    .catch(err => {
-      alert("견적 계산 중 오류 발생: " + err.message);
-    });
-}
 </script>
 
 </body>
