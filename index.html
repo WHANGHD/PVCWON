@@ -1,111 +1,70 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>PVC 견적 계산기</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    label { display: block; margin-top: 15px; font-weight: bold; }
-    select, input, button {
-      padding: 10px; font-size: 16px; width: 300px; margin-bottom: 10px;
+  <meta charset="UTF-8">
+  <title>창호 견적 계산기</title>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // 👈 배포된 Apps Script 웹앱 URL로 교체하세요
+
+    async function loadSheets() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const sheetSelect = document.getElementById("sheet");
+      sheetSelect.innerHTML = data.sheets.map(s => `<option value="${s}">${s}</option>`).join('');
     }
-    #resultBox {
-      margin-top: 20px; padding: 15px; border: 1px solid #ccc;
-      background: #f7f7f7; font-size: 18px;
+
+    async function calculateEstimate() {
+      const sheet = document.getElementById("sheet").value;
+      const sash = document.getElementById("sash").value;
+      const glass = document.getElementById("glass").value;
+      const width = document.getElementById("width").value;
+      const height = document.getElementById("height").value;
+      const qty = document.getElementById("qty").value;
+
+      const params = new URLSearchParams({ sheet, sash, glass, width, height, qty });
+      const res = await fetch(`${API_URL}?${params.toString()}`);
+      const data = await res.json();
+
+      const resultDiv = document.getElementById("result");
+      if (data.error) {
+        resultDiv.textContent = "❌ 오류: " + data.message;
+      } else {
+        resultDiv.innerHTML = `✅ 견적 금액: <strong>${data.result}</strong>`;
+      }
     }
-  </style>
+
+    window.onload = loadSheets;
+  </script>
 </head>
 <body>
+  <h2>창호 견적 계산기</h2>
 
-<h2>🪟 PVC 견적 계산기</h2>
+  <label>프레임 (시트): 
+    <select id="sheet"></select>
+  </label><br><br>
 
-<label>프레임 선택</label>
-<select id="sheetName"><option>불러오는 중...</option></select>
+  <label>창짝 선택: 
+    <select id="sash">
+      <option value="2짝">2짝</option>
+      <option value="3짝">3짝</option>
+      <option value="4짝">4짝</option>
+    </select>
+  </label><br><br>
 
-<label>문짝 종류</label>
-<p id="sash">-</p>
+  <label>유리 종류:
+    <select id="glass">
+      <option value="0">22투명+투명</option>
+      <option value="1">22그린+투명</option>
+      <option value="2">22투명+블투명</option>
+    </select>
+  </label><br><br>
 
-<label>짝수문</label>
-<select id="door">
-  <option value="2">2짝문</option>
-  <option value="3">3짝문</option>
-  <option value="4">4짝문</option>
-</select>
+  <label>폭 (W): <input type="number" id="width" required></label><br>
+  <label>높이 (H): <input type="number" id="height" required></label><br>
+  <label>수량 (Qty): <input type="number" id="qty" required></label><br><br>
 
-<label>가로 (mm)</label>
-<input type="number" id="width" placeholder="예: 1000">
+  <button onclick="calculateEstimate()">견적 계산</button>
 
-<label>세로 (mm)</label>
-<input type="number" id="height" placeholder="예: 1200">
-
-<label>유리 선택</label>
-<select id="glass">
-  <option value="0">22 투명+투명</option>
-  <option value="1">22 그린+투명</option>
-  <option value="2">22 투명+불투명</option>
-</select>
-
-<label>수량</label>
-<input type="number" id="qty" value="1">
-
-<button onclick="submitEstimate()">📥 견적 확인</button>
-
-<div id="resultBox">결과가 여기에 표시됩니다</div>
-
-<script>
-  const URL = "https://script.google.com/macros/s/AKfycbxWUsCmj5a7sM2pL2yTJx4tvAKg8gGXk6sf5mMwhssJm5PPzWOah4x6_5UtsBfjBM38zg/exec";
-
-  // 1) 시트 목록 불러오기
-  fetch(URL)
-    .then(r => r.json())
-    .then(data => {
-      const sel = document.getElementById("sheetName");
-      sel.innerHTML = '<option value="">-- 시트 선택 --</option>';
-      data.sheets.forEach(n => {
-        const o = document.createElement("option");
-        o.value = n; o.textContent = n;
-        sel.appendChild(o);
-      });
-    });
-
-  // 2) 문짝 종류 표시
-  document.getElementById("sheetName").addEventListener("change", () => {
-    const sheet = document.getElementById("sheetName").value;
-    if (!sheet) return;
-    fetch(`${URL}?sheet=${encodeURIComponent(sheet)}`)
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById("sash").textContent = data.note ? "-" : data.sash;  
-      });
-  });
-
-  // 3) 견적 계산 (GET 방식)
-  function submitEstimate() {
-    const sheet = document.getElementById("sheetName").value;
-    const door = document.getElementById("door").value;
-    const width = document.getElementById("width").value;
-    const height = document.getElementById("height").value;
-    const glass = document.getElementById("glass").value;
-    const qty = document.getElementById("qty").value;
-
-    if (!sheet || !width || !height || !qty) {
-      alert("모든 항목을 입력해주세요."); return;
-    }
-
-    const qs = new URLSearchParams({ sheet, door, glass, width, height, qty });
-    fetch(`${URL}?${qs.toString()}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) throw new Error(data.message);
-        const amt = Math.floor(data.result).toLocaleString();
-        document.getElementById("resultBox").innerHTML =
-          `💰 견적금액(VAT별도): <strong>${amt}원</strong><br>📝 ${data.note}`;
-      })
-      .catch(e => {
-        alert("계산 중 오류 발생: " + e.message);
-      });
-  }
-</script>
-
+  <div id="result" style="margin-top: 20px; font-weight: bold;"></div>
 </body>
 </html>
