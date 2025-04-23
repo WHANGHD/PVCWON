@@ -1,148 +1,119 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>창호 견적 계산기</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>(주)하나건업 PVC 견적 계산기</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      max-width: 500px;
-      margin: 40px auto;
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin: 0; padding: 20px;
+      background-color: #f4f4f4;
+      display: flex; justify-content: center;
     }
-    h2 {
-      text-align: center;
-      color: #333;
+    .wrapper { display: flex; flex-direction: row; gap: 20px; max-width: 1200px; width: 100%; }
+    .form-container, .summary-container {
+      background: #fff; padding: 25px;
+      border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      font-weight: bold;
-    }
+    .form-container { flex: 1; }
+    .summary-container { width: 350px; max-height: 700px; overflow-y: auto; }
+    h2 { text-align: center; color: #333; }
+    label { display: block; margin-top: 12px; font-weight: bold; }
     select, input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      font-size: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 10px;
+      width: 100%; padding: 10px; font-size: 15px;
+      border: 1px solid #ccc; border-radius: 6px; margin-top: 5px; margin-bottom: 10px;
     }
+    .button-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
     button {
-      width: 100%;
-      background-color: #007BFF;
-      color: white;
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
+      flex: 1; background-color: #007BFF; color: white;
+      padding: 10px; font-size: 16px; border: none;
+      border-radius: 6px; cursor: pointer;
     }
-    button:hover {
-      background-color: #0056b3;
+    button:hover { background-color: #0056b3; }
+    #result { margin-top: 20px; padding: 15px; background: #f8f8f8;
+      border-radius: 6px; font-size: 15px; border: 1px solid #ddd; }
+    .estimate-box {
+      background: #fcfcfc; border: 1px solid #ccc;
+      border-radius: 8px; padding: 12px; margin-bottom: 12px;
+      font-size: 14px; line-height: 1.6; position: relative;
     }
-    #result {
-      margin-top: 20px;
-      font-size: 18px;
-      color: #222;
+    .estimate-box .close-btn {
+      position: absolute; top: 6px; left: 10px;
+      color: #888; cursor: pointer; font-weight: bold;
+    }
+    .estimate-box .close-btn:hover { color: red; }
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .wrapper { flex-direction: column; }
+      .summary-container { width: 100%; margin-top: 20px; max-height: none; }
+      .button-group { flex-direction: column; }
+      button { width: 100%; }
     }
   </style>
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxwaCp1OT7-XmGvThRjalgj4iWzw-8MlcG8L0B6_m_6x1LXmYD2Rl73zF8bx-4gQ8mTgQ/exec";
-
-    async function loadSheets() {
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        const select = document.getElementById("sheet");
-        select.innerHTML = data.sheets.map(name => `<option value="${name}">${name}</option>`).join('');
-      } catch (err) {
-        document.getElementById("result").textContent = "❌ 프레임 목록을 불러오지 못했습니다.";
-      }
-    }
-
-    async function calculateEstimate() {
-      const sheet = document.getElementById("sheet").value;
-      const sash = document.getElementById("sash").value;
-      const glass = document.getElementById("glass").value;
-      const width = document.getElementById("width").value;
-      const height = document.getElementById("height").value;
-      const qty = document.getElementById("qty").value;
-
-      const params = new URLSearchParams({ sheet, sash, glass, width, height, qty });
-      try {
-        const res = await fetch(`${API_URL}?${params.toString()}`);
-        const data = await res.json();
-        const resultDiv = document.getElementById("result");
-
-        if (data.error) {
-          resultDiv.textContent = "❌ 오류: " + data.message;
-        } else {
-          const unitPrice = parseFloat(String(data.result).replace(/[^\d.]/g, '')) || 0;
-          const rounded = Math.round(unitPrice);
-          const qtyInt = parseInt(qty);
-          const supply = Math.round(rounded * qtyInt / 1.1);
-          const vat = rounded * qtyInt - supply;
-
-          resultDiv.innerHTML = `
-            <div style="text-align:left; padding:15px; background:#f1f1f1; border-radius:10px;">
-              <h3 style="margin-bottom: 10px;">🧾 견적 상세</h3>
-              <ul style="list-style:none; padding-left:0; line-height:1.8;">
-                <li><strong>프레임:</strong> ${sheet}</li>
-                <li><strong>짝수:</strong> ${sash}</li>
-                <li><strong>유리:</strong> ${document.getElementById("glass").selectedOptions[0].text}</li>
-                <li><strong>규격:</strong> ${width} × ${height}</li>
-                <li><strong>수량:</strong> ${qtyInt}개</li>
-                <li><strong>단가:</strong> ₩${rounded.toLocaleString()}</li>
-                <li><strong>공급가액:</strong> ₩${supply.toLocaleString()}</li>
-                <li><strong>VAT (10%):</strong> ₩${vat.toLocaleString()}</li>
-                <hr>
-                <li style="font-size:20px; font-weight:bold; color:#007BFF;">총 견적: ₩${(rounded * qtyInt).toLocaleString()}</li>
-              </ul>
-            </div>`;
-        }
-      } catch (err) {
-        document.getElementById("result").textContent = "❌ 서버 응답 오류가 발생했습니다.";
-      }
-    }
-
-    window.onload = loadSheets;
-  </script>
 </head>
 <body>
-  <h2>창호 견적 계산기</h2>
-
-  <label>프레임 (시트 선택)</label>
-  <select id="sheet"></select>
-
-  <label>창짝 (짝수)</label>
-  <select id="sash">
-    <option value="2짝">2짝</option>
-    <option value="3짝">3짝</option>
-    <option value="4짝">4짝</option>
-  </select>
-
-  <label>유리 종류</label>
-  <select id="glass">
-    <option value="0">22투명+투명</option>
-    <option value="1">22그린+투명</option>
-    <option value="2">22투명+블투명</option>
-  </select>
-
-  <label>폭 (W)</label>
-  <input type="number" id="width" placeholder="예: 2000">
-
-  <label>높이 (H)</label>
-  <input type="number" id="height" placeholder="예: 2000">
-
-  <label>수량</label>
-  <input type="number" id="qty" placeholder="예: 1">
-
-  <button onclick="calculateEstimate()">견적 계산</button>
-
-  <div id="result"></div>
-</body>
-</html>
+  <div class="wrapper">
+    <div class="form-container">
+      <h2>(주)하나건업 PVC 견적 계산기</h2>
+      <label>프레임 (시트 선택)</label><select id="sheet"></select>
+      <label>창짝 (짝수)</label>
+      <select id="sash"><option value="2짝">2짝</option><option value="3짝">3짝</option><option value="4짝">4짝</option></select>
+      <label>유리 종류</label>
+      <select id="glass"><option value="0">22투명+투명</option><option value="1">22그린+투명</option><option value="2">22투명+블투명</option></select>
+      <label>폭 (W)</label><input type="number" id="width" placeholder="예: 2000">
+      <label>높이 (H)</label><input type="number" id="height" placeholder="예: 2000">
+      <label>수량</label><input type="number" id="qty" placeholder="예: 1">
+      <div class="button-group"><button onclick="calculateEstimate()">견적 확인</button><button onclick="saveEstimate()">견적 저장</button></div>
+      <div id="result"></div>
+    </div>
+    <div class="summary-container">
+      <h3 style="text-align:center;">📌 간단 견적서</h3>
+      <div id="summaryList"></div>
+    </div>
+  </div>
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbz-Aog-1lfoWQIOLaN2q9E0VUGQV5UnkgikzWBrTJ4Tna3IR0sYBvqFRszxuf1iybbyEQ/exec";
+let lastResult = null;
+async function loadSheets() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+  document.getElementById("sheet").innerHTML = data.sheets.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+async function calculateEstimate() {
+  const s = document.getElementById("sheet").value;
+  const d = document.getElementById("sash").value;
+  const g = document.getElementById("glass").value;
+  const gt = document.getElementById("glass").selectedOptions[0].text;
+  const w = document.getElementById("width").value;
+  const h = document.getElementById("height").value;
+  const q = document.getElementById("qty").value;
+  const res = await fetch(`${API_URL}?sheet=${s}&sash=${d}&glass=${g}&width=${w}&height=${h}&qty=${q}`);
+  const data = await res.json();
+  const total = Math.round(parseFloat(data.result) || 0);
+  const supply = Math.round(total / 1.1);
+  const unit = Math.round(supply / parseInt(q));
+  document.getElementById("result").innerHTML = `
+    <strong>🧾 견적 상세</strong><br>
+    프레임: ${s}<br>문짝: ${d}<br>유리: ${gt}<br>규격: ${w} × ${h}<br>
+    수량: ${q}개<br>단가: ₩${unit.toLocaleString()}<br>
+    공급가액: ₩${supply.toLocaleString()}<br>
+    VAT (10%): ₩${(total - supply).toLocaleString()}<br>
+    <hr><strong>총 견적: ₩${total.toLocaleString()}</strong>`;
+  lastResult = { time: new Date().toLocaleString(), sheet: s, sash: d, width: w, height: h, qty: q, glassText: gt, unit, supply, total };
+}
+function saveEstimate() {
+  if (!lastResult) return alert("먼저 '견적 확인'을 눌러주세요.");
+  const d = document.createElement("div");
+  d.className = "estimate-box";
+  d.innerHTML = `<span class="close-btn" onclick="this.parentElement.remove()">×</span>
+    <div><strong>${lastResult.time}</strong></div>
+    [${lastResult.sheet}] ${lastResult.sash} / ${lastResult.width}×${lastResult.height} / ${lastResult.qty}EA / ${lastResult.glassText}<br>
+    단가: ₩${lastResult.unit.toLocaleString()}<br>
+    공급가액: ₩${lastResult.supply.toLocaleString()}<br>
+    <strong>총 견적: ₩${lastResult.total.toLocaleString()}</strong>`;
+  document.getElementById("summaryList").prepend(d);
+}
+window.onload = loadSheets;
+</script>
+</body></html>
