@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>하나건업 메인</title>
   <style>
@@ -58,9 +58,8 @@
       }
       .sidebar {
         width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
+        display: block;
+        padding: 10px;
       }
       .main {
         padding: 10px;
@@ -72,7 +71,13 @@
 
   <div class="sidebar">
     <h3>📂 견적 항목</h3>
-    <div id="menu">불러오는 중...</div>
+    <a onclick="loadPage('PVC견적')">PVC견적</a>
+    <a onclick="loadPage('견적준비중1')">견적준비중1</a>
+    <a onclick="loadPage('견적준비중2')">견적준비중2</a>
+    <a onclick="loadPage('견적준비중3')">견적준비중3</a>
+    <a onclick="loadPage('견적준비중4')">견적준비중4</a>
+    <a onclick="loadPage('견적준비중5')">견적준비중5</a>
+    <a onclick="loadPage('견적준비중6')">견적준비중6</a>
     <a onclick="logout()">🚪 로그아웃</a>
   </div>
 
@@ -90,31 +95,14 @@
       document.getElementById("welcome").innerText = `${userName}님, 환영합니다!`;
     }
 
-    // 메뉴 목록 가져오기
-    fetch("https://script.google.com/macros/s/AKfycbw0fvUNgcrTDHY_FBw247KruhY6wJJ7Mu1DvuwfNdnqJkVAXRbQkTlRQZaLpmHiJ7B9ng/exec")
-      .then(res => res.json())
-      .then(data => {
-        const menuDiv = document.getElementById("menu");
-        menuDiv.innerHTML = "";
-        data.sheets.forEach(sheetName => {
-          const a = document.createElement("a");
-          a.innerText = sheetName;
-          a.onclick = () => loadPage(sheetName);
-          menuDiv.appendChild(a);
-        });
-      })
-      .catch(() => {
-        document.getElementById("menu").innerText = "시트 목록 불러오기 실패";
-      });
-
-    function loadPage(sheetName) {
-      fetch(`${sheetName}.html`)
+    function loadPage(name) {
+      fetch(`${name}.html`)
         .then(res => res.text())
         .then(html => {
           document.getElementById("content").innerHTML = html;
         })
         .catch(() => {
-          document.getElementById("content").innerHTML = `<p>⚠️ ${sheetName}.html 페이지가 없습니다.</p>`;
+          document.getElementById("content").innerHTML = `<p>⚠️ ${name}.html 페이지가 없습니다.</p>`;
         });
     }
 
