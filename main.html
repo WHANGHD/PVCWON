@@ -1,16 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>하나건업 메인</title>
   <style>
     body {
       margin: 0;
       font-family: sans-serif;
       display: flex;
-      flex-direction: row;
       height: 100vh;
     }
     .sidebar {
@@ -34,36 +31,19 @@
       text-decoration: none;
       cursor: pointer;
     }
+    .sidebar a.disabled {
+      background: #7f8c8d;
+      cursor: default;
+      opacity: 0.6;
+    }
     .main {
       flex: 1;
-      display: flex;
-      flex-direction: column;
       padding: 20px;
-      overflow: hidden;
     }
     .header {
       font-size: 20px;
       font-weight: bold;
       margin-bottom: 20px;
-    }
-    #content {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-        height: auto;
-      }
-      .sidebar {
-        width: 100%;
-        display: block;
-        padding: 10px;
-      }
-      .main {
-        padding: 10px;
-      }
     }
   </style>
 </head>
@@ -71,13 +51,18 @@
 
   <div class="sidebar">
     <h3>📂 견적 항목</h3>
-    <a onclick="loadPage('PVC견적')">PVC견적</a>
-    <a onclick="loadPage('견적준비중1')">견적준비중1</a>
-    <a onclick="loadPage('견적준비중2')">견적준비중2</a>
-    <a onclick="loadPage('견적준비중3')">견적준비중3</a>
-    <a onclick="loadPage('견적준비중4')">견적준비중4</a>
-    <a onclick="loadPage('견적준비중5')">견적준비중5</a>
-    <a onclick="loadPage('견적준비중6')">견적준비중6</a>
+
+    <!-- 메뉴 1: PVC 견적 -->
+    <a onclick="loadPage('pvcmain.html')">📦 PVC 견적</a>
+
+    <!-- 메뉴 2~7: 추후 연결 예정 -->
+    <a class="disabled">🔧 견적 준비중 1</a>
+    <a class="disabled">🔧 견적 준비중 2</a>
+    <a class="disabled">🔧 견적 준비중 3</a>
+    <a class="disabled">🔧 견적 준비중 4</a>
+    <a class="disabled">🔧 견적 준비중 5</a>
+    <a class="disabled">🔧 견적 준비중 6</a>
+
     <a onclick="logout()">🚪 로그아웃</a>
   </div>
 
@@ -87,6 +72,7 @@
   </div>
 
   <script>
+    // 로그인 상태 확인
     const userName = localStorage.getItem("loginUser");
     if (!userName) {
       alert("로그인이 필요합니다.");
@@ -95,14 +81,15 @@
       document.getElementById("welcome").innerText = `${userName}님, 환영합니다!`;
     }
 
-    function loadPage(name) {
-      fetch(`${name}.html`)
+    // 콘텐츠 불러오기 함수
+    function loadPage(fileName) {
+      fetch(fileName)
         .then(res => res.text())
         .then(html => {
           document.getElementById("content").innerHTML = html;
         })
         .catch(() => {
-          document.getElementById("content").innerHTML = `<p>⚠️ ${name}.html 페이지가 없습니다.</p>`;
+          document.getElementById("content").innerHTML = `<p>⚠️ ${fileName} 파일이 없습니다.</p>`;
         });
     }
 
