@@ -130,5 +130,18 @@ function saveEstimate() {
 }
 window.onload = loadSheets;
 </script>
+
+<script>
+// 로그인 상태 감시 기능
+function checkLogin() {
+  const user = localStorage.getItem("loginUser");
+  if (!user) {
+    alert("세션이 만료되었습니다. 로그인 페이지로 이동합니다.");
+    window.location.href = "login.html";
+  }
+}
+checkLogin(); // 처음 진입 시 확인
+setInterval(checkLogin, 5000); // 이후 5초마다 확인
+</script>
 </body>
 </html>
