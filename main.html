@@ -67,70 +67,47 @@
 </head>
 <body>
 
-  <div class="sidebar">
+<div class="sidebar">
   <h3>📂 견적 항목</h3>
-  <a href="PVC견적.html" target="_blank">📦PVC견적</a>
-  <a href="🔧견적준비중1.html" target="_blank">🔧견적준비중1</a>
-  <a href="🔧견적준비중2.html" target="_blank">🔧견적준비중2</a>
-  <a href="🔧견적준비중3.html" target="_blank">🔧견적준비중3</a>
-  <a href="🔧견적준비중4.html" target="_blank">🔧견적준비중4</a>
-  <a href="🔧견적준비중5.html" target="_blank">🔧견적준비중5</a>
-  <a href="🔧견적준비중6.html" target="_blank">🔧견적준비중6</a>
+  <a href="#" onclick="openSecureWindow('PVC견적.html')">📦PVC견적</a>
+  <a href="#" onclick="openSecureWindow('🔧견적준비중1.html')">🔧견적준비중1</a>
+  <a href="#" onclick="openSecureWindow('🔧견적준비중2.html')">🔧견적준비중2</a>
+  <a href="#" onclick="openSecureWindow('🔧견적준비중3.html')">🔧견적준비중3</a>
+  <a href="#" onclick="openSecureWindow('🔧견적준비중4.html')">🔧견적준비중4</a>
+  <a href="#" onclick="openSecureWindow('🔧견적준비중5.html')">🔧견적준비중5</a>
+  <a href="#" onclick="openSecureWindow('🔧견적준비중6.html')">🔧견적준비중6</a>
   <a onclick="logout()">🚪 로그아웃</a>
 </div>
 
+<div class="main">
+  <div class="header" id="welcome">로그인 확인 중...</div>
+  <div id="content">좌측 메뉴에서 항목을 선택하세요.</div>
+</div>
 
-  <div class="main">
-    <div class="header" id="welcome">로그인 확인 중...</div>
-    <div id="content">좌측 메뉴에서 항목을 선택하세요.</div>
-  </div>
+<script>
+  const userName = localStorage.getItem("loginUser");
+  if (!userName) {
+    alert("로그인이 필요합니다.");
+    window.location.href = "login.html";
+  } else {
+    document.getElementById("welcome").innerText = `${userName}님, 환영합니다!`;
+  }
 
-  <script>
-    const userName = localStorage.getItem("loginUser");
-    if (!userName) {
+  function logout() {
+    localStorage.removeItem("loginUser");
+    window.location.href = "login.html";
+  }
+
+  function openSecureWindow(url) {
+    const user = localStorage.getItem("loginUser");
+    if (!user) {
       alert("로그인이 필요합니다.");
       window.location.href = "login.html";
-    } else {
-      document.getElementById("welcome").innerText = `${userName}님, 환영합니다!`;
+      return;
     }
-
-    function loadPage(name) {
-      fetch(`${name}.html`)
-        .then(res => res.text())
-        .then(html => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, "text/html");
-
-          const content = document.getElementById("content");
-          content.innerHTML = "";
-          content.append(...doc.body.children);
-
-          // 🔥 내부 script 실행 처리
-          doc.querySelectorAll("script").forEach(script => {
-            const newScript = document.createElement("script");
-            if (script.src) {
-              newScript.src = script.src;
-              newScript.async = false;
-              document.body.appendChild(newScript);
-            } else {
-              try {
-                eval(script.textContent);
-              } catch (e) {
-                console.error("스크립트 실행 오류:", e);
-              }
-            }
-          });
-        })
-        .catch(() => {
-          document.getElementById("content").innerHTML = `<p>⚠️ ${name}.html 페이지가 없습니다.</p>`;
-        });
-    }
-
-    function logout() {
-      localStorage.removeItem("loginUser");
-      window.location.href = "login.html";
-    }
-  </script>
+    window.open(url, "_blank");
+  }
+</script>
 
 </body>
 </html>
