@@ -1,40 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>하나건업 메인</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      display: flex;
-      height: 100vh;
-    }
-    .sidebar {
-      width: 220px;
-      background: #2c3e50;
-      color: white;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    .sidebar h3 {
-      font-size: 18px;
-      margin-bottom: 20px;
-    }
-    .sidebar a {
-      display: block;
-      margin: 10px 0;
-      padding: 8px;
-      color: white;
-      background: #34495e;
-      border-radius: 6px;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .sidebar a.disabled {
-      background: #7f8c8d;
-      cursor: default;
-      opacity: 0.6;
+
     }
     .main {
       flex: 1;
@@ -82,22 +46,33 @@
     }
 
     // 콘텐츠 불러오기 함수
-    function loadPage(fileName) {
-      fetch(fileName)
-        .then(res => res.text())
-        .then(html => {
-          document.getElementById("content").innerHTML = html;
-        })
-        .catch(() => {
-          document.getElementById("content").innerHTML = `<p>⚠️ ${fileName} 파일이 없습니다.</p>`;
-        });
-    }
+    function loadPage(name) {
+  fetch(`${name}.html`)
+    .then(res => res.text())
+    .then(html => {
+      const content = document.getElementById("content");
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
 
-    function logout() {
-      localStorage.removeItem("loginUser");
-      window.location.href = "login.html";
-    }
-  </script>
+      content.innerHTML = "";
+      content.append(...doc.body.children);
 
-</body>
-</html>
+      // 🔥 script 실행까지 강제 삽입
+      doc.querySelectorAll("script").forEach(script => {
+        const newScript = document.createElement("script");
+        if (script.src) {
+          newScript.src = script.src;
+          document.body.appendChild(newScript);
+        } else {
+          try {
+            eval(script.textContent); // ← 이 부분이 핵심
+          } catch (e) {
+            console.error("스크립트 실행 오류:", e);
+          }
+        }
+      });
+    })
+    .catch(() => {
+      document.getElementById("content").innerHTML = `<p>⚠️ ${name}.html 페이지가 없습니다.</p>`;
+    });
+}
