@@ -99,7 +99,21 @@
       fetch(`${name}.html`)
         .then(res => res.text())
         .then(html => {
-          document.getElementById("content").innerHTML = html;
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          const content = document.getElementById("content");
+          content.innerHTML = "";
+          content.append(...doc.body.children);
+
+          doc.querySelectorAll("script").forEach(oldScript => {
+            const newScript = document.createElement("script");
+            if (oldScript.src) {
+              newScript.src = oldScript.src;
+            } else {
+              newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
+          });
         })
         .catch(() => {
           document.getElementById("content").innerHTML = `<p>⚠️ ${name}.html 페이지가 없습니다.</p>`;
