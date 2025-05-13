@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -73,12 +74,25 @@
     </div>
   </div>
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxjM5VZvnIJ7L8U-07EnEalve0qCehnipHdCPAzzLCuWFpst_gA_oJsMWeZ9gcB3BMmfw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw0fvUNgcrTDHY_FBw247KruhY6wJJ7Mu1DvuwfNdnqJkVAXRbQkTlRQZaLpmHiJ7B9ng/exec";
 let lastResult = null;
 async function loadSheets() {
-  const res = await fetch(API_URL);
-  const data = await res.json();
-  document.getElementById("sheet").innerHTML = data.sheets.map(n => `<option value="${n}">${n}</option>`).join('');
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    console.log("✅ 시트 목록 받아옴:", data);
+    const sheetSelect = document.getElementById("sheet");
+    sheetSelect.innerHTML = data.sheets
+      .filter(name => typeof name === "string" && name.trim().length > 0)
+      .map(name => {
+        const safe = name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        console.log("▶ 시트:", JSON.stringify(safe));
+        return `<option value="${safe}">${safe}</option>`;
+      }).join('');
+  } catch (err) {
+    console.error("❌ 시트 불러오기 실패:", err);
+    document.getElementById("sheet").innerHTML = `<option disabled>불러오기 실패</option>`;
+  }
 }
 async function calculateEstimate() {
   const s = document.getElementById("sheet").value;
@@ -116,4 +130,5 @@ function saveEstimate() {
 }
 window.onload = loadSheets;
 </script>
-</body></html>
+</body>
+</html>
