@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>하나건업 메인</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 220px;
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .sidebar h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .sidebar a {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      color: white;
+      background: #34495e;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .sidebar a.disabled {
+      background: #7f8c8d;
+      cursor: default;
+      opacity: 0.6;
+    }
+    .main {
+      flex: 1;
+      padding: 20px;
+    }
+    .header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h3>📂 견적 항목</h3>
+
+    <!-- 메뉴 1: PVC 견적 -->
+    <a onclick="loadPage('pvcmain.html')">📦 PVC 견적</a>
+
+    <!-- 메뉴 2~7: 추후 연결 예정 -->
+    <a class="disabled">🔧 견적 준비중 1</a>
+    <a class="disabled">🔧 견적 준비중 2</a>
+    <a class="disabled">🔧 견적 준비중 3</a>
+    <a class="disabled">🔧 견적 준비중 4</a>
+    <a class="disabled">🔧 견적 준비중 5</a>
+    <a class="disabled">🔧 견적 준비중 6</a>
+
+    <a onclick="logout()">🚪 로그아웃</a>
+  </div>
+
+  <div class="main">
+    <div class="header" id="welcome">로그인 확인 중...</div>
+    <div id="content">좌측 메뉴에서 항목을 선택하세요.</div>
+  </div>
+
+  <script>
+    // 로그인 상태 확인
+    const userName = localStorage.getItem("loginUser");
+    if (!userName) {
+      alert("로그인이 필요합니다.");
+      window.location.href = "login.html";
+    } else {
+      document.getElementById("welcome").innerText = `${userName}님, 환영합니다!`;
+    }
+
+    // 콘텐츠 불러오기 함수
+    function loadPage(fileName) {
+      fetch(fileName)
+        .then(res => res.text())
+        .then(html => {
+          document.getElementById("content").innerHTML = html;
+        })
+        .catch(() => {
+          document.getElementById("content").innerHTML = `<p>⚠️ ${fileName} 파일이 없습니다.</p>`;
+        });
+    }
+
+    function logout() {
+      localStorage.removeItem("loginUser");
+      window.location.href = "login.html";
+    }
+  </script>
+
+</body>
+</html>

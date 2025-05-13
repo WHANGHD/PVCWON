@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>하나건업 로그인</title>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f5f6fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      width: 320px;
+      box-sizing: border-box;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #2c3e50;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #3498db;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .message {
+      margin-top: 10px;
+      text-align: center;
+      color: red;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h2>하나건업 로그인</h2>
+    <input type="text" id="id" placeholder="아이디">
+    <input type="password" id="pw" placeholder="비밀번호">
+    <button onclick="login()">로그인</button>
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+    function login() {
+      const id = document.getElementById("id").value.trim();
+      const pw = document.getElementById("pw").value.trim();
+      const msg = document.getElementById("message");
+      msg.innerText = "";
+
+      if (!id || !pw) {
+        msg.innerText = "아이디와 비밀번호를 모두 입력해주세요.";
+        return;
+      }
+
+      fetch("https://script.google.com/macros/s/AKfycbyZ93ulSgL9Rw9iu4v-6AJDMDHUzTudcwyKBgs09p3Hw_BQNLNYVgtCYmi4hOcM6bzp/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id=${encodeURIComponent(id)}&pw=${encodeURIComponent(pw)}`
+      })
+      .then(res => res.text())
+      .then(txt => {
+        try {
+          const data = JSON.parse(txt);
+          if (data.result === "success") {
+            alert(`${data.name}님 환영합니다!`);
+            localStorage.setItem("loginUser", data.name); // 이름 저장
+            window.location.href = "main.html"; // 다음 페이지로 이동
+          } else {
+            msg.innerText = "아이디 또는 비밀번호가 잘못되었습니다.";
+          }
+        } catch (err) {
+          msg.innerText = "응답 처리 중 오류가 발생했습니다.";
+        }
+      })
+      .catch(() => {
+        msg.innerText = "서버와 통신할 수 없습니다.";
+      });
+    }
+  </script>
+
+</body>
+</html>
