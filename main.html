@@ -85,6 +85,8 @@
 </div>
 
 <script>
+  let childWindows = [];
+
   const userName = localStorage.getItem("loginUser");
   if (!userName) {
     alert("로그인이 필요합니다.");
@@ -94,6 +96,14 @@
   }
 
   function logout() {
+    // 열린 자식 창 모두 닫기
+    childWindows.forEach(win => {
+      if (win && !win.closed) {
+        win.close();
+      }
+    });
+    childWindows = [];
+
     localStorage.removeItem("loginUser");
     window.location.href = "login.html";
   }
@@ -105,9 +115,19 @@
       window.location.href = "login.html";
       return;
     }
-    window.open(url, "_blank");
-  }
-</script>
 
-</body>
-</html>
+    const win = window.open(url, "_blank");
+    if (win) {
+      childWindows.push(win);
+    }
+  }
+
+  // 메인 창이 닫힐 때 자식 창 닫기
+  window.addEventListener("beforeunload", () => {
+    childWindows.forEach(win => {
+      if (win && !win.closed) {
+        win.close();
+      }
+    });
+  });
+</script>
